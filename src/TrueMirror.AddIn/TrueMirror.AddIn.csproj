@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <Platforms>AnyCPU</Platforms>
+    <!-- SOLIDWORKS is 64-bit only; the add-in must match or it will not load. -->
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>TrueMirror.AddIn</AssemblyName>
+    <RootNamespace>TrueMirror.AddIn</RootNamespace>
+
+    <!-- Required for SOLIDWORKS to instantiate the add-in through COM. -->
+    <ComVisible>true</ComVisible>
+
+    <!-- The Xarial.XCad.SolidWorks targets run RegAsm /codebase on AfterBuild, which
+         writes to HKLM. Visual Studio must therefore be launched As Administrator or
+         the build fails at the registration step. See README. -->
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets net48 compile without Visual Studio or the .NET Framework targeting
+         pack - the same package CI systems use. Makes `dotnet build` work on a
+         bare machine (and on macOS/Linux for compile-checking). -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Xarial.XCad.SolidWorks" Version="0.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TrueMirror.Core\TrueMirror.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+
+</Project>

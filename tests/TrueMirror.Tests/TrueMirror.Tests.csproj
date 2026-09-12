@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net8.0 lets these run on any machine (CI, macOS, a laptop with no SOLIDWORKS).
+         net48 matches the shipping add-in. Same tests, both. -->
+    <TargetFrameworks>net48;net8.0</TargetFrameworks>
+    <LangVersion>8.0</LangVersion>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>TrueMirror.Tests</AssemblyName>
+    <RootNamespace>TrueMirror.Tests</RootNamespace>
+
+    <!-- Same reason as TrueMirror.Core: stop the xCAD targets COM-registering a
+         library that is not a SOLIDWORKS add-in. -->
+    <XCadRegDll>false</XCadRegDll>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets net48 compile without Visual Studio or the .NET Framework targeting
+         pack - the same package CI systems use. Makes `dotnet build` work on a
+         bare machine (and on macOS/Linux for compile-checking). -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TrueMirror.Core\TrueMirror.Core.csproj" />
+  </ItemGroup>
+
+</Project>

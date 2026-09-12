@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net48 is the real target: xCAD's stable 0.8.3 ships lib/net461 and SOLIDWORKS
+         add-ins are .NET Framework COM servers.
+
+         net8.0 is a TEST-ONLY target that compiles just the SOLIDWORKS-free half of the
+         library (Geometry, Model, Resolver, Report). It exists so the mirroring math -
+         the part most likely to be subtly wrong - can be unit-tested on any machine,
+         including CI and macOS, with no SOLIDWORKS and no Windows. -->
+    <TargetFrameworks>net48;net8.0</TargetFrameworks>
+    <LangVersion>8.0</LangVersion>
+    <AssemblyName>TrueMirror.Core</AssemblyName>
+    <RootNamespace>TrueMirror.Core</RootNamespace>
+
+    <!-- CRITICAL: the Xarial.XCad.SolidWorks package auto-runs RegAsm on AfterBuild for
+         ANY project with OutputType=Library. Core is a plain library, not a COM add-in,
+         so without this it would be pointlessly registered as one (and would fail the
+         build without admin rights). Only the AddIn project should register. -->
+    <XCadRegDll>false</XCadRegDll>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lets net48 compile without Visual Studio or the .NET Framework targeting pack -
+         the same package CI systems use. Makes `dotnet build` work on a bare machine. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <!-- Brings SolidWorks.Interop.sldworks / .swconst / .swpublished with it -
+         no separate Interops package reference is needed. -->
+    <PackageReference Include="Xarial.XCad.SolidWorks" Version="0.8.3" />
+  </ItemGroup>
+
+  <!-- Everything that touches the SOLIDWORKS API is excluded from the net8.0 test target.
+       If you add a file that uses SolidWorks.Interop, add it here too or the net8.0 build
+       will break - which is the point: it keeps the pure/impure boundary honest. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <Compile Remove="FeatureTreeReader.cs" />
+    <Compile Remove="Interop/FeatureReader.cs" />
+    <Compile Remove="Interop/FeatureWriter.cs" />
+    <Compile Remove="Interop/GeometryProbe.cs" />
+    <Compile Remove="Interop/ImportedBodyFallback.cs" />
+    <Compile Remove="Interop/MassPropertyValidator.cs" />
+    <Compile Remove="Interop/MirrorPlaneFactory.cs" />
+    <Compile Remove="Interop/PlaneResolver.cs" />
+    <Compile Remove="Interop/SketchWriter.cs" />
+    <Compile Remove="Transcribe/Transcriber.cs" />
+  </ItemGroup>
+
+</Project>
