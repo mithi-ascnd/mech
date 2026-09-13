@@ -10,19 +10,22 @@ external references and a tree you can actually edit.
 
 Full design: [`specs/2026-09-12-mirror-with-live-feature-tree.md`](specs/2026-09-12-mirror-with-live-feature-tree.md)
 
-## Status: compiles, unit-tested, never run against SOLIDWORKS
+## Status: runs inside SOLIDWORKS; the mirror command is not yet proven
 
-- **Builds clean.** All three projects compile with 0 errors, 0 warnings
-  (verified on macOS via `dotnet build`, using the .NET Framework reference
-  assemblies package).
-- **38 unit tests pass.** They cover the mirroring math, the arc-direction rule,
-  and the entity resolver, and they run on any machine with no SOLIDWORKS and no
-  licence: `dotnet test tests/TrueMirror.Tests -f net8.0`.
-- **Nothing has ever executed against a live SOLIDWORKS.** Every interop
-  signature was verified by reflecting over the shipped interop assembly, but
-  verified-to-compile is not verified-to-work.
+- **Builds clean.** 0 errors, 0 warnings.
+- **38 unit tests pass** with no SOLIDWORKS and no licence:
+  `dotnet test tests/TrueMirror.Tests -f net8.0`
+- **The add-in loads into SOLIDWORKS and all three commands execute.** Confirmed
+  on SOLIDWORKS Student Edition.
+- **The sketch coordinate-space question is settled.** The diagnostic asked for
+  model `(0, 0, 0.05)` and read back `(0, 0, 0.05)` — the model-space assumption
+  in `SketchWriter` is correct.
+- **`Mirror to Independent Part` has not yet been proven on a parametric part.**
+  It has only been run against an imported STEP file, where 0% is the correct
+  answer because STEP carries no feature history. That is the open question.
 
-To try it on a Windows machine, follow **[TESTING.md](TESTING.md)** — it needs
+Picking this up fresh? Start with **[HANDOFF.md](HANDOFF.md)**.
+To set it up on a Windows machine, see **[TESTING.md](TESTING.md)** — it needs
 only the .NET 8 SDK (~200 MB), not Visual Studio.
 
 ## Requirements

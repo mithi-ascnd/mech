@@ -67,6 +67,25 @@ namespace TrueMirror.Core.Transcribe
 
             foreach (var w in reader.Warnings) report.Warnings.Add(w);
 
+            // Imported parts (STEP / IGES / Parasolid) carry solid bodies but NO parametric
+            // history - the exporting CAD system discarded the recipe. There is nothing to
+            // transcribe, and reporting "0 of N rebuilt natively" reads like a tool failure
+            // when it is actually the correct and only possible answer.
+            //
+            // Detected without relying on a type name: a part modelled in SOLIDWORKS always
+            // has at least one sketch. Bodies but no sketches means imported geometry.
+            if (IsImportedGeometry(features, sourcePart))
+            {
+                report.Warnings.Add(
+                    "This part has solid bodies but no sketches, which means it was imported " +
+                    "(STEP/IGES/Parasolid) rather than modelled in SOLIDWORKS. Imported parts " +
+                    "carry no feature history, so there is no recipe to mirror. Use " +
+                    "SOLIDWORKS' own Insert > Mirror Part for this file - TrueMirror can only " +
+                    "help with parts that have a real feature tree.");
+                report.ImportedBodyNote = "source is imported geometry with no feature history";
+                return report;
+            }
+
             // ---- create the target -----------------------------------------
             mirrorDoc = CreateEmptyPart(out var createError);
             if (mirrorDoc == null)
@@ -181,6 +200,30 @@ namespace TrueMirror.Core.Transcribe
             }
 
             report.ImportedBodyInserted = true;
+        }
+
+        /// <summary>
+        /// True when the source is imported geometry rather than a modelled part.
+        ///
+        /// Heuristic, deliberately not based on a feature type name: SOLIDWORKS type-name
+        /// strings for import features vary by format and version, whereas "a modelled part
+        /// always contains at least one sketch" holds universally. Bodies present plus zero
+        /// sketches is therefore a reliable tell.
+        /// </summary>
+        private static bool IsImportedGeometry(
+            IReadOnlyList<CapturedFeature> features, IPartDoc part)
+        {
+            if (features.Any(f => f is SketchFeature)) return false;
+
+            try
+            {
+                return new GeometryProbe().GetSolidBodies(part).Any();
+            }
+            catch
+            {
+                // If we cannot tell, do not block the run - fall through to normal handling.
+                return false;
+            }
         }
 
         /// <summary>Any unit vector perpendicular to n, chosen stably.</summary>

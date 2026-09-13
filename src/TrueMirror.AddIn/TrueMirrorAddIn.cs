@@ -110,7 +110,12 @@ namespace TrueMirror.AddIn
         {
             if (report.Total == 0)
             {
-                return "Nothing was transcribed. See the report for why.";
+                // Surface the actual reason instead of a dead end. The commonest case by far
+                // is an imported STEP part, where "nothing transcribed" is the correct answer
+                // and the user needs to be told why rather than left guessing.
+                return report.Warnings.Count > 0
+                    ? string.Join(Environment.NewLine + Environment.NewLine, report.Warnings)
+                    : "Nothing was transcribed. See the report for why.";
             }
 
             var line = $"{report.NativeCount} of {report.Total} features rebuilt natively " +
